@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ public class Blook8rService implements LeScanCallback {
     private Listener mListener;
     private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
     private static final float LOCATION_UPDATE_ALPHA = 0.1f;
+    private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
     {
         // TODO: Load this dynamically
         addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(10.0f, 10.0f), -56);
@@ -78,6 +80,7 @@ public class Blook8rService implements LeScanCallback {
     private static class RSSIReading {
         private final Beacon beacon;
         private int rssi;
+        private long timestamp;
 
         public RSSIReading(Beacon beacon) {
             this.beacon = beacon;
@@ -85,6 +88,7 @@ public class Blook8rService implements LeScanCallback {
 
         public void setRSSI(int rssi) {
             this.rssi = rssi;
+            timestamp = System.currentTimeMillis();
         }
 
         public RSSIReading withRSSI(int rssi) {
@@ -181,6 +185,14 @@ public class Blook8rService implements LeScanCallback {
 
     public void recalculateLocation() {
         android.util.Log.d(TAG, "Got readings " + Arrays.toString(mReadings.toArray(new RSSIReading[0])));
+        // Sometimes I wish I was writing Python or Ruby - remove any out-of-date readings from the list
+        Iterator<RSSIReading> it = mReadings.iterator();
+        long expiryTimestamp = System.currentTimeMillis() - EXPIRY_TIME_MILLIS;
+        while (it.hasNext()) {
+            if (it.next().timestamp < expiryTimestamp) {
+                it.remove();
+            }
+        }
         if (mReadings.size() >= MIN_BEACONS) {
             switch (mReadings.size()) {
             case 1:
