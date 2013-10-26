@@ -16,6 +16,9 @@
 
 package com.github.matt.williams.blook8r;
 
+import java.util.Map;
+
+import com.github.matt.williams.blook8r.Blook8rService.Beacon;
 import com.github.matt.williams.blook8r.Blook8rService.Location;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -123,6 +126,15 @@ public class MapActivity extends FragmentActivity
         mMap.setOnMapLongClickListener(this);
 
         mTransparencyBar.setOnSeekBarChangeListener(this);
+        
+        Map<String, Beacon> beacons = blook8r.getBeacons();
+        for (Beacon beacon : beacons.values())
+        {
+        	LatLng point = new LatLng(beacon.location.y, beacon.location.x);
+            mMap.addMarker(new MarkerOptions()
+            .position(point)
+            .title(beacon.name));
+        }
     }
 
     @Override

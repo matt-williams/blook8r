@@ -62,9 +62,14 @@ public class Blook8rService implements LeScanCallback {
         }
     }
 
-    private static class Beacon {
-        private final String name;
-        private final Location location;
+    Map<String,Beacon> getBeacons()
+    {
+    	return mBeacons;
+    }
+    
+    static class Beacon {
+        final String name;
+        final Location location;
         private final int signalStrength;
 
         public Beacon(String name, Location location, int signalStrength) {
