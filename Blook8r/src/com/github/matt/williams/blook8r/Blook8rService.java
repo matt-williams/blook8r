@@ -24,6 +24,7 @@ public class Blook8rService implements LeScanCallback {
     private final Map<String,Beacon> mBeacons = new HashMap<String,Beacon>();
     private Listener mListener;
     private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
+    private static final float LOCATION_UPDATE_ALPHA = 0.1f;
     {
         // TODO: Load this dynamically
         addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(10.0f, 10.0f), -56);
@@ -166,13 +167,20 @@ public class Blook8rService implements LeScanCallback {
         return alpha;
     }
 
+    public void updateLocation(float x, float y) {
+        // TODO: Smooth based on confidence/time interval since last update.
+        mLastLocation.x = x * LOCATION_UPDATE_ALPHA + mLastLocation.x * (1 - LOCATION_UPDATE_ALPHA);
+        mLastLocation.y = y * LOCATION_UPDATE_ALPHA + mLastLocation.y * (1 - LOCATION_UPDATE_ALPHA);
+        mListener.onLocationChanged(mLastLocation, 0.0f);
+    }
+
     public void recalculateLocation() {
         android.util.Log.d(TAG, "Got readings " + Arrays.toString(mReadings.toArray(new RSSIReading[0])));
         if (mReadings.size() >= MIN_BEACONS) {
             switch (mReadings.size()) {
             case 1:
                 // Only one reading - assume at the beacon.
-                mLastLocation.set(mReadings.get(0).beacon.location);
+                updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.x);
                 break;
             case 2:
                 // 2 readings - assume between them.
@@ -182,8 +190,7 @@ public class Blook8rService implements LeScanCallback {
                                                                reading2.rssi - reading2.beacon.signalStrength));
                 Location location1 = reading1.beacon.location;
                 Location location2 = reading2.beacon.location;
-                mLastLocation.x = location1.x * alpha + location2.x * (1 - alpha);
-                mLastLocation.y = location1.y * alpha + location2.y * (1 - alpha);
+                updateLocation(location1.x * alpha + location2.x * (1 - alpha), location1.y * alpha + location2.y * (1 - alpha));
                 break;
             default:
                 Collections.sort(mReadings, new Comparator<RSSIReading>() {
@@ -220,11 +227,9 @@ public class Blook8rService implements LeScanCallback {
                     DetY = A*F -E*C;
 
                     android.util.Log.d(TAG, "Det = " + Det + ", DetX = " + DetX + ", DetY = " + DetY);
-                    mLastLocation.x = DetX / Det;
-                    mLastLocation.y = DetY / Det;
+                    updateLocation(DetX / Det, DetY / Det);
                 }
             }
         }
-        mListener.onLocationChanged(mLastLocation, 0.0f);
     }
 }
