@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -19,17 +20,19 @@ import android.util.FloatMath;
 public class Blook8rService implements LeScanCallback {
     private static final String TAG = "Blook8rService";
     private BluetoothAdapter mBluetoothAdapter;
-    private final Location mLastLocation = new Location();
+    private Location mLastLocation = null;
     private final List<RSSIReading> mReadings = new ArrayList<RSSIReading>();
     private final Map<String,Beacon> mBeacons = new HashMap<String,Beacon>();
     private Listener mListener;
     private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
+    private static final float LOCATION_UPDATE_ALPHA = 0.1f;
+    private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
     {
         // TODO: Load this dynamically
-        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(0.0f, 0.0f), -56);
-        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(10.0f, 10.0f), -56);
-        addBeacon("nRF LE 1", "EF:FF:C0:AA:18:00", new Location(0.0f, 10.0f), -56);
-        addBeacon("nRF LE 2", "EF:FF:C0:AA:18:01", new Location(10.0f, 0.0f), -56);
+        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(10.0f, 10.0f), -56);
+        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(10.0f, 20.0f), -56);
+        addBeacon("nRF LE 1", "00:18:AA:C0:FF:EF", new Location(20.0f, 20.0f), -56);
+        addBeacon("nRF LE 2", "01:18:AA:C0:FF:EF", new Location(20.0f, 10.0f), -56);
     }
 
     public static class Location {
@@ -77,6 +80,7 @@ public class Blook8rService implements LeScanCallback {
     private static class RSSIReading {
         private final Beacon beacon;
         private int rssi;
+        private long timestamp;
 
         public RSSIReading(Beacon beacon) {
             this.beacon = beacon;
@@ -84,6 +88,7 @@ public class Blook8rService implements LeScanCallback {
 
         public void setRSSI(int rssi) {
             this.rssi = rssi;
+            timestamp = System.currentTimeMillis();
         }
 
         public RSSIReading withRSSI(int rssi) {
@@ -166,13 +171,33 @@ public class Blook8rService implements LeScanCallback {
         return alpha;
     }
 
+    public void updateLocation(float x, float y) {
+        // TODO: Smooth based on confidence/time interval since last update.
+        float alpha = LOCATION_UPDATE_ALPHA;
+        if (mLastLocation == null) {
+            mLastLocation = new Location();
+            alpha = 1.0f;
+        }
+        mLastLocation.x = x * alpha + mLastLocation.x * (1 - alpha);
+        mLastLocation.y = y * alpha + mLastLocation.y * (1 - alpha);
+        mListener.onLocationChanged(mLastLocation, 0.0f);
+    }
+
     public void recalculateLocation() {
         android.util.Log.d(TAG, "Got readings " + Arrays.toString(mReadings.toArray(new RSSIReading[0])));
+        // Sometimes I wish I was writing Python or Ruby - remove any out-of-date readings from the list
+        Iterator<RSSIReading> it = mReadings.iterator();
+        long expiryTimestamp = System.currentTimeMillis() - EXPIRY_TIME_MILLIS;
+        while (it.hasNext()) {
+            if (it.next().timestamp < expiryTimestamp) {
+                it.remove();
+            }
+        }
         if (mReadings.size() >= MIN_BEACONS) {
             switch (mReadings.size()) {
             case 1:
                 // Only one reading - assume at the beacon.
-                mLastLocation.set(mReadings.get(0).beacon.location);
+                updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.x);
                 break;
             case 2:
                 // 2 readings - assume between them.
@@ -182,8 +207,7 @@ public class Blook8rService implements LeScanCallback {
                                                                reading2.rssi - reading2.beacon.signalStrength));
                 Location location1 = reading1.beacon.location;
                 Location location2 = reading2.beacon.location;
-                mLastLocation.x = location1.x * alpha + location2.x * (1 - alpha);
-                mLastLocation.y = location1.y * alpha + location2.y * (1 - alpha);
+                updateLocation(location1.x * alpha + location2.x * (1 - alpha), location1.y * alpha + location2.y * (1 - alpha));
                 break;
             default:
                 Collections.sort(mReadings, new Comparator<RSSIReading>() {
@@ -193,11 +217,36 @@ public class Blook8rService implements LeScanCallback {
                     }
                 });
                 // TODO: Should probably calculate ratio between two beacons and then solve resulting ellipses - this would eliminate differences in receiver sensitivity.
-                for (RSSIReading reading : mReadings) {
-                    rssiToDistanceRatio(reading.rssi, reading.beacon.signalStrength);
+                float distance[] = new float[3];
+                Location location[] = new Location[3];
+                // Calculate distance from 3 strongest beacons.
+                for (int index = 0; index < 3; index++) {
+                    RSSIReading reading = mReadings.get(index);
+                    // Signal strength is at 1 distance unit, so ratio corresponds to actual distance.
+                    distance[index] = rssiToDistanceRatio(reading.rssi, reading.beacon.signalStrength);
+                    location[index] = reading.beacon.location;
+                }
+                float a1 = location[0].x; float b1 = location[0].y; float d1 = distance[0];
+                float a2 = location[1].x; float b2 = location[1].y; float d2 = distance[1];
+                float a3 = location[2].x; float b3 = location[2].y; float d3 = distance[2];
+                // Maths borrowed from http://www.ece.ucdavis.edu/~chuah/classes/eec173B/eec173b-s05/students/BluetoothTri_ppt.pdf:
+                {
+                    float A, B, C, D, E, F, Det, DetX, DetY;
+                    A = -2*a1 + 2*a2;
+                    B = -2*b1 + 2*b2;
+                    C = -2*a2 + 2*a3;
+                    D = -2*b2 + 2*b3;
+                    E = FloatMath.pow(d1, 2) - FloatMath.pow(d2, 2) - FloatMath.pow(a1, 2) + FloatMath.pow(a2, 2) - FloatMath.pow(b1, 2) + FloatMath.pow(b2, 2);
+                    F = FloatMath.pow(d2, 2) - FloatMath.pow(d3, 2) - FloatMath.pow(a2, 2) + FloatMath.pow(a3, 2) - FloatMath.pow(b2, 2) + FloatMath.pow(b3, 2);
+                    //Using Cramer’s Rule
+                    Det = A*D -B*C;
+                    DetX= E*D -B*F;
+                    DetY = A*F -E*C;
+
+                    android.util.Log.d(TAG, "Det = " + Det + ", DetX = " + DetX + ", DetY = " + DetY);
+                    updateLocation(DetX / Det, DetY / Det);
                 }
             }
         }
-        mListener.onLocationChanged(mLastLocation, 0.0f);
     }
 }
