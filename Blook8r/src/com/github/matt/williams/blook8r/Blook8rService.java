@@ -111,22 +111,7 @@ public class Blook8rService implements LeScanCallback {
     }
 
     public boolean start(Context context, Listener listener) {
-        // Load beacon data
-        try {
-            JSONArray jsonArray = (JSONArray)new JSONTokener(JSONUtils.readStream(context.getAssets().open("beacons.json"))).nextValue();
-            for (int ii = 0; ii < jsonArray.length(); ii++) {
-                JSONObject jsonObject = (JSONObject)jsonArray.get(ii);
-                addBeacon(jsonObject.getString("Name"),
-                          jsonObject.getString("Address"),
-                          new Location((float)jsonObject.getJSONObject("Location").getDouble("x"),
-                                       (float)jsonObject.getJSONObject("Location").getDouble("y")),
-                          jsonObject.getInt("SignalStrength"));
-            }
-        } catch (JSONException e) {
-            android.util.Log.e(TAG, "Failed to parse beacons.json", e);
-        } catch (IOException e) {
-            android.util.Log.e(TAG, "Failed to read beacons.json", e);
-        }
+    	loadBeaconData(context);
 
         final BluetoothManager bluetoothManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
@@ -144,6 +129,25 @@ public class Blook8rService implements LeScanCallback {
             return false;
         }
     }
+
+	private void loadBeaconData(Context context) {
+		// Load beacon data
+        try {
+            JSONArray jsonArray = (JSONArray)new JSONTokener(JSONUtils.readStream(context.getAssets().open("beacons.json"))).nextValue();
+            for (int ii = 0; ii < jsonArray.length(); ii++) {
+                JSONObject jsonObject = (JSONObject)jsonArray.get(ii);
+                addBeacon(jsonObject.getString("Name"),
+                          jsonObject.getString("Address"),
+                          new Location((float)jsonObject.getJSONObject("Location").getDouble("x"),
+                                       (float)jsonObject.getJSONObject("Location").getDouble("y")),
+                          jsonObject.getInt("SignalStrength"));
+            }
+        } catch (JSONException e) {
+            android.util.Log.e(TAG, "Failed to parse beacons.json", e);
+        } catch (IOException e) {
+            android.util.Log.e(TAG, "Failed to read beacons.json", e);
+        }
+	}
 
     public void stop() {
         if (mBluetoothAdapter != null) {

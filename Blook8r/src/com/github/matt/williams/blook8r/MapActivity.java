@@ -46,7 +46,6 @@ public class MapActivity extends FragmentActivity
              OnMapLongClickListener,
              Blook8rService.Listener
 {
-
     private static final int TRANSPARENCY_MAX = 100;
     private static final LatLng PLACE = new LatLng(
     		51.50492954737005,
