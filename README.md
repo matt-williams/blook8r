@@ -1,4 +1,4 @@
 blook8r
 =======
 
-Bluetooth LE location hack
+Bluetooth Low Energy Location Services

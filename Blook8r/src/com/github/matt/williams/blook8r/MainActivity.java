@@ -2,18 +2,16 @@ package com.github.matt.williams.blook8r;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothAdapter.LeScanCallback;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 
-public class MainActivity extends Activity implements LeScanCallback {
+import com.github.matt.williams.blook8r.Blook8rService.Location;
+
+public class MainActivity extends Activity implements Blook8rService.Listener {
 
     private static final int REQUEST_ENABLE_BT = 1;
-    private BluetoothAdapter mBluetoothAdapter;
+    private final Blook8rService blook8r = new Blook8rService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +19,7 @@ public class MainActivity extends Activity implements LeScanCallback {
 
         // Ensures Bluetooth is available on the device and it is enabled. If not,
         // displays a dialog requesting user permission to enable Bluetooth.
-        if (!initBluetoothAdapter()) {
+        if (!blook8r.start(this, this)) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
@@ -29,26 +27,11 @@ public class MainActivity extends Activity implements LeScanCallback {
         setContentView(R.layout.activity_main);
     }
 
-    private boolean initBluetoothAdapter() {
-        final BluetoothManager bluetoothManager = (BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-
-        // Ensures Bluetooth is available on the device and it is enabled. If not,
-        // displays a dialog requesting user permission to enable Bluetooth.
-        if ((bluetoothAdapter != null) && bluetoothAdapter.isEnabled()) {
-            mBluetoothAdapter = bluetoothAdapter;
-            bluetoothAdapter.startLeScan(this);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_ENABLE_BT) {
             if ((resultCode != RESULT_OK) ||
-                (!initBluetoothAdapter())) {
+                (!blook8r.start(this, this))) {
                 finish();
             }
         }
@@ -62,7 +45,7 @@ public class MainActivity extends Activity implements LeScanCallback {
     }
 
     @Override
-    public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        android.util.Log.e("Main", "Got Device " + device.getName());
+    public void onLocationChanged(Location location, float error) {
+        android.util.Log.e("Main", "Got Location " + location);
     }
 }
