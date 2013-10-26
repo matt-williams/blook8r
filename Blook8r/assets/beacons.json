@@ -1,0 +1,4 @@
+[{"Name": "StickNFind 1", "Address": "EB:36:B8:95:B3:75", "Location": {"x": -0.01945659122807086, "y": 51.50490606936728}, "SignalStrength": -56},
+ {"Name": "StickNFind 2", "Address": "CF:BF:5E:21:65:B8", "Location": {"x": -0.01945718950902564, "y": 51.5049040161022}, "SignalStrength": -56},
+ {"Name": "nRF LE 1", "Address": "00:18:AA:C0:FF:EF", "Location": {"x":     -0.01945697212567534, "y": 51.5049057311245}, "SignalStrength": -56},
+ {"Name": "nRF LE 2", "Address": "01:18:AA:C0:FF:EF", "Location": {"x":     -0.01945638299288312, "y": 51.5049043135568}, "SignalStrength": -56}]

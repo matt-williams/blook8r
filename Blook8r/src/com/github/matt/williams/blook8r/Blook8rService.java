@@ -1,5 +1,6 @@
 package com.github.matt.williams.blook8r;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,6 +9,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -27,19 +33,6 @@ public class Blook8rService implements LeScanCallback {
     private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
     private static final float LOCATION_UPDATE_ALPHA = 0.1f;
     private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
-    {
-        // TODO: Load this dynamically
-        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(
-        		-0.01945659122807086f,
-        		51.50490606936728f
-        		), -56);
-        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(
-        		-0.01945718950902564f,
-        		51.5049040161022f
-        		), -56);
-//        addBeacon("nRF LE 1", "00:18:AA:C0:FF:EF", new Location(20.0f, 20.0f), -56);
-//        addBeacon("nRF LE 2", "01:18:AA:C0:FF:EF", new Location(20.0f, 10.0f), -56);
-    }
 
     public static class Location {
         public float x;
@@ -113,6 +106,23 @@ public class Blook8rService implements LeScanCallback {
     }
 
     public boolean start(Context context, Listener listener) {
+        // Load beacon data
+        try {
+            JSONArray jsonArray = (JSONArray)new JSONTokener(JSONUtils.readStream(context.getAssets().open("beacons.json"))).nextValue();
+            for (int ii = 0; ii < jsonArray.length(); ii++) {
+                JSONObject jsonObject = (JSONObject)jsonArray.get(ii);
+                addBeacon(jsonObject.getString("Name"),
+                          jsonObject.getString("Address"),
+                          new Location((float)jsonObject.getJSONObject("Location").getDouble("x"),
+                                       (float)jsonObject.getJSONObject("Location").getDouble("y")),
+                          jsonObject.getInt("SignalStrength"));
+            }
+        } catch (JSONException e) {
+            android.util.Log.e(TAG, "Failed to parse beacons.json", e);
+        } catch (IOException e) {
+            android.util.Log.e(TAG, "Failed to read beacons.json", e);
+        }
+
         final BluetoothManager bluetoothManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
         mListener = listener;
@@ -122,7 +132,7 @@ public class Blook8rService implements LeScanCallback {
         if ((bluetoothAdapter != null) && bluetoothAdapter.isEnabled()) {
             mBluetoothAdapter = bluetoothAdapter;
             boolean success = bluetoothAdapter.startLeScan(this);
- 
+
             android.util.Log.i(TAG, success ? "Started LE scan" : "Failed to start scan");
             return true;
         } else {
@@ -180,7 +190,7 @@ public class Blook8rService implements LeScanCallback {
     }
 
     public void updateLocation(float x, float y) {
-    	
+
         android.util.Log.i(TAG, "UpdateLocation " + x + ", " + y);
 
         // TODO: Smooth based on confidence/time interval since last update.
@@ -218,7 +228,7 @@ public class Blook8rService implements LeScanCallback {
                                                                reading2.rssi - reading2.beacon.signalStrength));
                 Location location1 = reading1.beacon.location;
                 Location location2 = reading2.beacon.location;
-                
+
                 updateLocation(location1.x * (1 - alpha) + location2.x * alpha, location1.y * (1 - alpha) + location2.y * alpha);
                 break;
             default:

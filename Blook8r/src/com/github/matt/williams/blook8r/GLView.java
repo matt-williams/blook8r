@@ -1,13 +1,13 @@
 package com.github.matt.williams.blook8r;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
+import java.io.IOException;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONTokener;
 
 import android.content.Context;
@@ -48,25 +48,17 @@ public class GLView extends GLSurfaceView implements Renderer {
         setEGLConfigChooser(8, 8, 8, 0, 16, 0);
         setRenderer(this);
         try {
-            JSONArray jsonArray = (JSONArray)new JSONTokener(readStream(getContext().getAssets().open("map.json"))).nextValue();
+            JSONArray jsonArray = (JSONArray)new JSONTokener(JSONUtils.readStream(getContext().getAssets().open("map.json"))).nextValue();
             float[] vertices = new float[jsonArray.length()];
             for (int ii = 0; ii < vertices.length; ii++) {
                 vertices[ii] = (float)jsonArray.getDouble(ii);
             }
             mVertices = vertices;
-        } catch (Exception e) {
-            android.util.Log.e(TAG, "Exception reading floor39.json", e);
+        } catch (JSONException e) {
+            android.util.Log.e(TAG, "Failed to parse map.json", e);
+        } catch (IOException e) {
+            android.util.Log.e(TAG, "Failed to read map.json", e);
         }
-    }
-
-    public static String readStream(InputStream is) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder builder = new StringBuilder();
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-          builder.append(line).append("\n");
-        }
-        return builder.toString();
     }
 
     @Override
