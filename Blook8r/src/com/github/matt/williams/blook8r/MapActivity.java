@@ -88,13 +88,24 @@ public class MapActivity extends FragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
-         
+
         // Ensures Bluetooth is available on the device and it is enabled. If not,
         // displays a dialog requesting user permission to enable Bluetooth.
         if (!blook8r.start(this, this)) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+        
+        setUpMapIfNeeded();
+        
+        Map<String, Beacon> beacons = blook8r.getBeacons();
+        for (Beacon beacon : beacons.values())
+        {
+        	LatLng point = new LatLng(beacon.location.y, beacon.location.x);
+            mMap.addMarker(new MarkerOptions()
+            .position(point)
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+            .title(beacon.name));
         }
     }
     
@@ -126,14 +137,7 @@ public class MapActivity extends FragmentActivity
 
         mTransparencyBar.setOnSeekBarChangeListener(this);
         
-        Map<String, Beacon> beacons = blook8r.getBeacons();
-        for (Beacon beacon : beacons.values())
-        {
-        	LatLng point = new LatLng(beacon.location.y, beacon.location.x);
-            mMap.addMarker(new MarkerOptions()
-            .position(point)
-            .title(beacon.name));
-        }
+
     }
 
     @Override
