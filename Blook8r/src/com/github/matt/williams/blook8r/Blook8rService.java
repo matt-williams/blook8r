@@ -139,7 +139,7 @@ public class Blook8rService implements LeScanCallback {
 
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        android.util.Log.e("Main", "Got Device " + device.getName() + " with MAC " + device.getAddress());
+        android.util.Log.e(TAG, "Got Device " + device.getName() + " with MAC " + device.getAddress());
         Beacon beacon = mBeacons.get(device.getAddress());
         if (beacon != null) {
             boolean needNewReading = true;
@@ -219,11 +219,7 @@ public class Blook8rService implements LeScanCallback {
                 Location location1 = reading1.beacon.location;
                 Location location2 = reading2.beacon.location;
                 
-                android.util.Log.i(TAG, "Beacon 1 " + reading1.beacon + " beacon 2 " + reading2.beacon);
-                android.util.Log.i(TAG, "Beacon 1 " + location1 + " beacon 2 " + location2);
-
-                
-                updateLocation(location1.x * alpha + location2.x * (1 - alpha), location1.y * alpha + location2.y * (1 - alpha));
+                updateLocation(location1.x * (1 - alpha) + location2.x * alpha, location1.y * (1 - alpha) + location2.y * alpha);
                 break;
             default:
                 Collections.sort(mReadings, new Comparator<RSSIReading>() {

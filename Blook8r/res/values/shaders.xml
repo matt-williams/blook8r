@@ -1,0 +1,41 @@
+<resources>
+
+
+<string name="locationVertexShader"><![CDATA[
+attribute vec3 xyz;
+uniform mat4 matrix;
+
+void main() {
+  gl_Position = matrix * vec4(xyz, 1.0);
+  gl_PointSize = 32.0;
+}
+]]></string>
+   
+   
+<string name="locationFragmentShader"><![CDATA[
+void main() {
+  gl_FragColor = vec4(1, 0, 0, 1.0);
+}
+]]></string>
+
+<string name="mapVertexShader"><![CDATA[
+attribute vec3 xyz;
+uniform mat4 matrix;
+varying lowp float z;
+
+void main() {
+  gl_Position = matrix * vec4(xyz, 1.0);
+  z = xyz.z * 0.5 + 0.5;
+}
+]]></string>
+   
+   
+<string name="mapFragmentShader"><![CDATA[
+varying lowp float z;
+    
+void main() {
+  gl_FragColor = vec4(z, z, z, 1.0);
+}
+]]></string>
+
+</resources>
