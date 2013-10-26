@@ -29,10 +29,16 @@ public class Blook8rService implements LeScanCallback {
     private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
     {
         // TODO: Load this dynamically
-        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(10.0f, 10.0f), -56);
-        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(10.0f, 20.0f), -56);
-        addBeacon("nRF LE 1", "00:18:AA:C0:FF:EF", new Location(20.0f, 20.0f), -56);
-        addBeacon("nRF LE 2", "01:18:AA:C0:FF:EF", new Location(20.0f, 10.0f), -56);
+        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(
+        		-0.01945659122807086f,
+        		51.50490606936728f
+        		), -56);
+        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(
+        		-0.01945718950902564f,
+        		51.5049040161022f
+        		), -56);
+//        addBeacon("nRF LE 1", "00:18:AA:C0:FF:EF", new Location(20.0f, 20.0f), -56);
+//        addBeacon("nRF LE 2", "01:18:AA:C0:FF:EF", new Location(20.0f, 10.0f), -56);
     }
 
     public static class Location {
@@ -115,7 +121,9 @@ public class Blook8rService implements LeScanCallback {
         // displays a dialog requesting user permission to enable Bluetooth.
         if ((bluetoothAdapter != null) && bluetoothAdapter.isEnabled()) {
             mBluetoothAdapter = bluetoothAdapter;
-            bluetoothAdapter.startLeScan(this);
+            boolean success = bluetoothAdapter.startLeScan(this);
+ 
+            android.util.Log.i(TAG, success ? "Started LE scan" : "Failed to start scan");
             return true;
         } else {
             return false;
@@ -172,6 +180,9 @@ public class Blook8rService implements LeScanCallback {
     }
 
     public void updateLocation(float x, float y) {
+    	
+        android.util.Log.i(TAG, "UpdateLocation " + x + ", " + y);
+
         // TODO: Smooth based on confidence/time interval since last update.
         float alpha = LOCATION_UPDATE_ALPHA;
         if (mLastLocation == null) {
@@ -197,7 +208,7 @@ public class Blook8rService implements LeScanCallback {
             switch (mReadings.size()) {
             case 1:
                 // Only one reading - assume at the beacon.
-                updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.x);
+                updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.y);
                 break;
             case 2:
                 // 2 readings - assume between them.
@@ -207,6 +218,11 @@ public class Blook8rService implements LeScanCallback {
                                                                reading2.rssi - reading2.beacon.signalStrength));
                 Location location1 = reading1.beacon.location;
                 Location location2 = reading2.beacon.location;
+                
+                android.util.Log.i(TAG, "Beacon 1 " + reading1.beacon + " beacon 2 " + reading2.beacon);
+                android.util.Log.i(TAG, "Beacon 1 " + location1 + " beacon 2 " + location2);
+
+                
                 updateLocation(location1.x * alpha + location2.x * (1 - alpha), location1.y * alpha + location2.y * (1 - alpha));
                 break;
             default:
