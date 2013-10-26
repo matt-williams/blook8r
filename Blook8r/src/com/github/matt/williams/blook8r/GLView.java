@@ -122,8 +122,9 @@ public class GLView extends GLSurfaceView implements Renderer {
 
     }
 
-    public void setLocation(float x, float y) {
-        mLocationX = (x + 0.01945718950902564f) / (-0.01945659122807086f - -0.01945718950902564f) * 14 - 7;
-        mLocationY = (y - 51.5049040161022f) / (51.50490606936728f - 51.5049040161022f) * 14 - 7;
+    public void setLocation(double x, double y) {
+        mLocationX = (float)((x + 0.01945718950902564f) / (-0.01945659122807086 - -0.01945718950902564) * 14 - 7);
+        mLocationY = (float)((y - 51.5049040161022f) / (51.50490606936728 - 51.5049040161022) * 14 - 7);
+        android.util.Log.e(TAG, "Got OpenGL location " + mLocationX + ", " + mLocationY);
     }
 }

@@ -20,7 +20,6 @@ import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.util.FloatMath;
 
 // TODO: Not yet a service - would be good to make it so!
 public class Blook8rService implements LeScanCallback {
@@ -35,11 +34,11 @@ public class Blook8rService implements LeScanCallback {
     private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
 
     public static class Location {
-        public float x;
-        public float y;
+        public double x;
+        public double y;
 
         public Location() {}
-        public Location(float x, float y) {
+        public Location(double x, double y) {
             this.x = x;
             this.y = y;
         }
@@ -113,8 +112,8 @@ public class Blook8rService implements LeScanCallback {
                 JSONObject jsonObject = (JSONObject)jsonArray.get(ii);
                 addBeacon(jsonObject.getString("Name"),
                           jsonObject.getString("Address"),
-                          new Location((float)jsonObject.getJSONObject("Location").getDouble("x"),
-                                       (float)jsonObject.getJSONObject("Location").getDouble("y")),
+                          new Location(jsonObject.getJSONObject("Location").getDouble("x"),
+                                       jsonObject.getJSONObject("Location").getDouble("y")),
                           jsonObject.getInt("SignalStrength"));
             }
         } catch (JSONException e) {
@@ -171,33 +170,33 @@ public class Blook8rService implements LeScanCallback {
     }
 
     /// Returns the distance from here to the source of RSSI1 over the distance from here to the source of RSSI2
-    public static float rssiToDistanceRatio(int rssi1, int rssi2) {
+    public static double rssiToDistanceRatio(int rssi1, int rssi2) {
         // RSSI is in dB, so is 10*log10(power)
         // Hence, power is 10^(rssi/10)
         // Ratio of powers is 10^((rssiA - rssiB) / 10)
         // Assuming that signal strength degrades as 1/(r^2), i.e. no obstructions
         // Ratio of distances is 1/sqrt(10^((rssiA - rssiB) / 10))
         // This is 10^((rssiB - rssiA) / 20)
-        return FloatMath.pow(10, (rssi2 - rssi1) / 20.0f);
+        return Math.pow(10, (rssi2 - rssi1) / 20.0f);
     }
 
-    public static float ratioToAlpha(float a_over_b) {
+    public static double ratioToAlpha(double a_over_b) {
         // We have a / b and we want to calculate a / (a + b).
         // TODO: Check for overlow (shouldn't happen as a_over_b is never zero.
-        float alpha = 1 / ((1 / a_over_b) + 1);
+        double alpha = 1 / ((1 / a_over_b) + 1);
         android.util.Log.d(TAG, "Translated a_over_b (" + a_over_b + ") to " + alpha);
         return alpha;
     }
 
-    public void updateLocation(float x, float y) {
+    public void updateLocation(double x, double y) {
 
         android.util.Log.i(TAG, "UpdateLocation " + x + ", " + y);
 
         // TODO: Smooth based on confidence/time interval since last update.
-        float alpha = LOCATION_UPDATE_ALPHA;
+        double alpha = LOCATION_UPDATE_ALPHA;
         if (mLastLocation == null) {
             mLastLocation = new Location();
-            alpha = 1.0f;
+            alpha = 1.0;
         }
         mLastLocation.x = x * alpha + mLastLocation.x * (1 - alpha);
         mLastLocation.y = y * alpha + mLastLocation.y * (1 - alpha);
@@ -224,8 +223,8 @@ public class Blook8rService implements LeScanCallback {
                 // 2 readings - assume between them.
                 RSSIReading reading1 = mReadings.get(0);
                 RSSIReading reading2 = mReadings.get(1);
-                float alpha = ratioToAlpha(rssiToDistanceRatio(reading1.rssi - reading1.beacon.signalStrength,
-                                                               reading2.rssi - reading2.beacon.signalStrength));
+                double alpha = ratioToAlpha(rssiToDistanceRatio(reading1.rssi - reading1.beacon.signalStrength,
+                                                                reading2.rssi - reading2.beacon.signalStrength));
                 Location location1 = reading1.beacon.location;
                 Location location2 = reading2.beacon.location;
 
@@ -239,7 +238,7 @@ public class Blook8rService implements LeScanCallback {
                     }
                 });
                 // TODO: Should probably calculate ratio between two beacons and then solve resulting ellipses - this would eliminate differences in receiver sensitivity.
-                float distance[] = new float[3];
+                double distance[] = new double[3];
                 Location location[] = new Location[3];
                 // Calculate distance from 3 strongest beacons.
                 for (int index = 0; index < 3; index++) {
@@ -248,18 +247,18 @@ public class Blook8rService implements LeScanCallback {
                     distance[index] = rssiToDistanceRatio(reading.rssi, reading.beacon.signalStrength);
                     location[index] = reading.beacon.location;
                 }
-                float a1 = location[0].x; float b1 = location[0].y; float d1 = distance[0];
-                float a2 = location[1].x; float b2 = location[1].y; float d2 = distance[1];
-                float a3 = location[2].x; float b3 = location[2].y; float d3 = distance[2];
+                double a1 = location[0].x; double b1 = location[0].y; double d1 = distance[0];
+                double a2 = location[1].x; double b2 = location[1].y; double d2 = distance[1];
+                double a3 = location[2].x; double b3 = location[2].y; double d3 = distance[2];
                 // Maths borrowed from http://www.ece.ucdavis.edu/~chuah/classes/eec173B/eec173b-s05/students/BluetoothTri_ppt.pdf:
                 {
-                    float A, B, C, D, E, F, Det, DetX, DetY;
+                    double A, B, C, D, E, F, Det, DetX, DetY;
                     A = -2*a1 + 2*a2;
                     B = -2*b1 + 2*b2;
                     C = -2*a2 + 2*a3;
                     D = -2*b2 + 2*b3;
-                    E = FloatMath.pow(d1, 2) - FloatMath.pow(d2, 2) - FloatMath.pow(a1, 2) + FloatMath.pow(a2, 2) - FloatMath.pow(b1, 2) + FloatMath.pow(b2, 2);
-                    F = FloatMath.pow(d2, 2) - FloatMath.pow(d3, 2) - FloatMath.pow(a2, 2) + FloatMath.pow(a3, 2) - FloatMath.pow(b2, 2) + FloatMath.pow(b3, 2);
+                    E = Math.pow(d1, 2) - Math.pow(d2, 2) - Math.pow(a1, 2) + Math.pow(a2, 2) - Math.pow(b1, 2) + Math.pow(b2, 2);
+                    F = Math.pow(d2, 2) - Math.pow(d3, 2) - Math.pow(a2, 2) + Math.pow(a3, 2) - Math.pow(b2, 2) + Math.pow(b3, 2);
                     //Using Cramer’s Rule
                     Det = A*D -B*C;
                     DetX= E*D -B*F;
