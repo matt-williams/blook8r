@@ -10,21 +10,48 @@
 
 	<uses-permission android:name="android.permission.BLUETOOTH"/>
 	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+	
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+      <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"/>
+      
+        <!-- External storage for caching. -->
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <!-- My Location -->
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    
 	<uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+	
+	  <!-- Maps API needs OpenGL ES 2.0. -->
+  <uses-feature
+    android:glEsVersion="0x00020000"
+    android:required="true"/>
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+            android:hardwareAccelerated="true"
+         >
+        
+        <meta-data android:name="com.google.android.maps.v2.API_KEY"
+          android:value="AIzaSyBriEoNbVZzkpGdM_YZilQ4HFrpVwhmO7Q"/>
+        
         <activity
-            android:name="com.github.matt.williams.blook8r.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        
+        <activity
+            android:name=".MapActivity"
+            android:label="MapActivity" >
         </activity>
     </application>
 
