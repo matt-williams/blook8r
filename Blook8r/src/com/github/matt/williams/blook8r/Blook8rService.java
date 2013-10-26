@@ -2,6 +2,8 @@ package com.github.matt.williams.blook8r;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.util.FloatMath;
 
 // TODO: Not yet a service - would be good to make it so!
 public class Blook8rService implements LeScanCallback {
@@ -19,9 +22,14 @@ public class Blook8rService implements LeScanCallback {
     private final Location mLastLocation = new Location();
     private final List<RSSIReading> mReadings = new ArrayList<RSSIReading>();
     private final Map<String,Beacon> mBeacons = new HashMap<String,Beacon>();
+    private Listener mListener;
+    private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
     {
-        addBeacon("nRF LE", new Location(0.0f, 0.0f));
-        addBeacon("nRF L2", new Location(10.0f, 10.0f));
+        // TODO: Load this dynamically
+        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(0.0f, 0.0f), -56);
+        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(10.0f, 10.0f), -56);
+        addBeacon("nRF LE 1", "EF:FF:C0:AA:18:00", new Location(0.0f, 10.0f), -56);
+        addBeacon("nRF LE 2", "EF:FF:C0:AA:18:01", new Location(10.0f, 0.0f), -56);
     }
 
     public static class Location {
@@ -34,6 +42,11 @@ public class Blook8rService implements LeScanCallback {
             this.y = y;
         }
 
+        public void set(Location location) {
+            x = location.x;
+            y = location.y;
+        }
+
         @Override
         public String toString() {
             return "(" + x + ", " + y + ")";
@@ -43,10 +56,12 @@ public class Blook8rService implements LeScanCallback {
     private static class Beacon {
         private final String name;
         private final Location location;
+        private final int signalStrength;
 
-        public Beacon(String name, Location location) {
+        public Beacon(String name, Location location, int signalStrength) {
             this.name = name;
             this.location = location;
+            this.signalStrength = signalStrength;
         }
 
         @Override
@@ -55,23 +70,23 @@ public class Blook8rService implements LeScanCallback {
         }
     }
 
-    private void addBeacon(String name, Location location) {
-        mBeacons.put(name, new Beacon(name, location));
+    private void addBeacon(String name, String macAddress, Location location, int rssi) {
+        mBeacons.put(macAddress, new Beacon(name, location, rssi));
     }
 
     private static class RSSIReading {
         private final Beacon beacon;
-        private float rssi;
+        private int rssi;
 
         public RSSIReading(Beacon beacon) {
             this.beacon = beacon;
         }
 
-        public void setRSSI(float rssi) {
+        public void setRSSI(int rssi) {
             this.rssi = rssi;
         }
 
-        public RSSIReading withRSSI(float rssi) {
+        public RSSIReading withRSSI(int rssi) {
             setRSSI(rssi);
             return this;
         }
@@ -89,6 +104,7 @@ public class Blook8rService implements LeScanCallback {
     public boolean start(Context context, Listener listener) {
         final BluetoothManager bluetoothManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+        mListener = listener;
 
         // Ensures Bluetooth is available on the device and it is enabled. If not,
         // displays a dialog requesting user permission to enable Bluetooth.
@@ -101,10 +117,17 @@ public class Blook8rService implements LeScanCallback {
         }
     }
 
+    public void stop() {
+        if (mBluetoothAdapter != null) {
+            mBluetoothAdapter.stopLeScan(this);
+            mBluetoothAdapter = null;
+        }
+    }
+
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        android.util.Log.e("Main", "Got Device " + device.getName());
-        Beacon beacon = mBeacons.get(device.getName());
+        android.util.Log.e("Main", "Got Device " + device.getName() + " with MAC " + device.getAddress());
+        Beacon beacon = mBeacons.get(device.getAddress());
         if (beacon != null) {
             boolean needNewReading = true;
             for (RSSIReading reading : mReadings) {
@@ -124,8 +147,57 @@ public class Blook8rService implements LeScanCallback {
         }
     }
 
+    /// Returns the distance from here to the source of RSSI1 over the distance from here to the source of RSSI2
+    public static float rssiToDistanceRatio(int rssi1, int rssi2) {
+        // RSSI is in dB, so is 10*log10(power)
+        // Hence, power is 10^(rssi/10)
+        // Ratio of powers is 10^((rssiA - rssiB) / 10)
+        // Assuming that signal strength degrades as 1/(r^2), i.e. no obstructions
+        // Ratio of distances is 1/sqrt(10^((rssiA - rssiB) / 10))
+        // This is 10^((rssiB - rssiA) / 20)
+        return FloatMath.pow(10, (rssi2 - rssi1) / 20.0f);
+    }
+
+    public static float ratioToAlpha(float a_over_b) {
+        // We have a / b and we want to calculate a / (a + b).
+        // TODO: Check for overlow (shouldn't happen as a_over_b is never zero.
+        float alpha = 1 / ((1 / a_over_b) + 1);
+        android.util.Log.d(TAG, "Translated a_over_b (" + a_over_b + ") to " + alpha);
+        return alpha;
+    }
+
     public void recalculateLocation() {
         android.util.Log.d(TAG, "Got readings " + Arrays.toString(mReadings.toArray(new RSSIReading[0])));
-        // TODO: Some fun maths
+        if (mReadings.size() >= MIN_BEACONS) {
+            switch (mReadings.size()) {
+            case 1:
+                // Only one reading - assume at the beacon.
+                mLastLocation.set(mReadings.get(0).beacon.location);
+                break;
+            case 2:
+                // 2 readings - assume between them.
+                RSSIReading reading1 = mReadings.get(0);
+                RSSIReading reading2 = mReadings.get(1);
+                float alpha = ratioToAlpha(rssiToDistanceRatio(reading1.rssi - reading1.beacon.signalStrength,
+                                                               reading2.rssi - reading2.beacon.signalStrength));
+                Location location1 = reading1.beacon.location;
+                Location location2 = reading2.beacon.location;
+                mLastLocation.x = location1.x * alpha + location2.x * (1 - alpha);
+                mLastLocation.y = location1.y * alpha + location2.y * (1 - alpha);
+                break;
+            default:
+                Collections.sort(mReadings, new Comparator<RSSIReading>() {
+                    @Override
+                    public int compare(RSSIReading reading1, RSSIReading reading2) {
+                        return reading1.rssi - reading2.rssi;
+                    }
+                });
+                // TODO: Should probably calculate ratio between two beacons and then solve resulting ellipses - this would eliminate differences in receiver sensitivity.
+                for (RSSIReading reading : mReadings) {
+                    rssiToDistanceRatio(reading.rssi, reading.beacon.signalStrength);
+                }
+            }
+        }
+        mListener.onLocationChanged(mLastLocation, 0.0f);
     }
 }
