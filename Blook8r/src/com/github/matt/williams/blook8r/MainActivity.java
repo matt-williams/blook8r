@@ -12,11 +12,14 @@ public class MainActivity extends Activity implements Blook8rService.Listener {
 
     private static final int REQUEST_ENABLE_BT = 1;
     private final Blook8rService blook8r = new Blook8rService();
+    private GLView mGlView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mGlView = (GLView)findViewById(R.id.glview);
     }
 
     @Override
@@ -39,12 +42,14 @@ public class MainActivity extends Activity implements Blook8rService.Listener {
     @Override
     public void onPause() {
         blook8r.stop();
+        mGlView.onPause();
         super.onPause();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        mGlView.onResume();
         // Ensures Bluetooth is available on the device and it is enabled. If not,
         // displays a dialog requesting user permission to enable Bluetooth.
         if (!blook8r.start(this, this)) {
