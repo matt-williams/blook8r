@@ -116,7 +116,7 @@ public class MapActivity extends FragmentActivity
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(PLACE, 18));
 
         mGroundOverlay = mMap.addGroundOverlay(new GroundOverlayOptions()
-                .image(BitmapDescriptorFactory.fromResource(R.drawable.squarefloorplanmono)).anchor(0.5f, 0.5f)
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.floorplan39)).anchor(0.5f, 0.5f)
                 .position(PLACE, 60f, 60f)
                 .bearing(10f));
         
