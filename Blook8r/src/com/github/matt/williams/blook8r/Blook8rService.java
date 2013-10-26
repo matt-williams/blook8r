@@ -29,8 +29,8 @@ public class Blook8rService implements LeScanCallback {
     private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
     {
         // TODO: Load this dynamically
-        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(10.0f, 10.0f), -56);
-        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(10.0f, 20.0f), -56);
+        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(-7.0f, -7.0f), -56);
+        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(7.0f, 7.0f), -56);
         addBeacon("nRF LE 1", "00:18:AA:C0:FF:EF", new Location(20.0f, 20.0f), -56);
         addBeacon("nRF LE 2", "01:18:AA:C0:FF:EF", new Location(20.0f, 10.0f), -56);
     }
@@ -131,7 +131,7 @@ public class Blook8rService implements LeScanCallback {
 
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        android.util.Log.e("Main", "Got Device " + device.getName() + " with MAC " + device.getAddress());
+        android.util.Log.e(TAG, "Got Device " + device.getName() + " with MAC " + device.getAddress());
         Beacon beacon = mBeacons.get(device.getAddress());
         if (beacon != null) {
             boolean needNewReading = true;
@@ -197,7 +197,7 @@ public class Blook8rService implements LeScanCallback {
             switch (mReadings.size()) {
             case 1:
                 // Only one reading - assume at the beacon.
-                updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.x);
+                updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.y);
                 break;
             case 2:
                 // 2 readings - assume between them.
@@ -207,7 +207,7 @@ public class Blook8rService implements LeScanCallback {
                                                                reading2.rssi - reading2.beacon.signalStrength));
                 Location location1 = reading1.beacon.location;
                 Location location2 = reading2.beacon.location;
-                updateLocation(location1.x * alpha + location2.x * (1 - alpha), location1.y * alpha + location2.y * (1 - alpha));
+                updateLocation(location1.x * (1 - alpha) + location2.x * alpha, location1.y * (1 - alpha) + location2.y * alpha);
                 break;
             default:
                 Collections.sort(mReadings, new Comparator<RSSIReading>() {

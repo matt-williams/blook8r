@@ -61,5 +61,6 @@ public class MainActivity extends Activity implements Blook8rService.Listener {
     @Override
     public void onLocationChanged(Location location, float error) {
         android.util.Log.e("Main", "Got Location " + location);
+        mGlView.setLocation(location.x, location.y);
     }
 }
