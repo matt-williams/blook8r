@@ -26,10 +26,10 @@ public class Blook8rService implements LeScanCallback {
     private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
     {
         // TODO: Load this dynamically
-        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(0.0f, 0.0f), -56);
-        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(10.0f, 10.0f), -56);
-        addBeacon("nRF LE 1", "EF:FF:C0:AA:18:00", new Location(0.0f, 10.0f), -56);
-        addBeacon("nRF LE 2", "EF:FF:C0:AA:18:01", new Location(10.0f, 0.0f), -56);
+        addBeacon("StickNFind 1", "EB:36:B8:95:B3:75", new Location(10.0f, 10.0f), -56);
+        addBeacon("StickNFind 2", "CF:BF:5E:21:65:B8", new Location(10.0f, 20.0f), -56);
+        addBeacon("nRF LE 1", "00:18:AA:C0:FF:EF", new Location(20.0f, 20.0f), -56);
+        addBeacon("nRF LE 2", "01:18:AA:C0:FF:EF", new Location(20.0f, 10.0f), -56);
     }
 
     public static class Location {
@@ -193,8 +193,35 @@ public class Blook8rService implements LeScanCallback {
                     }
                 });
                 // TODO: Should probably calculate ratio between two beacons and then solve resulting ellipses - this would eliminate differences in receiver sensitivity.
-                for (RSSIReading reading : mReadings) {
-                    rssiToDistanceRatio(reading.rssi, reading.beacon.signalStrength);
+                float distance[] = new float[3];
+                Location location[] = new Location[3];
+                // Caculate distance from 3 strongest beacons.
+                for (int index = 0; index < 3; index++) {
+                    RSSIReading reading = mReadings.get(index);
+                    // Signal strength is at 1 distance unit, so ratio corresdponds to actual distance.
+                    distance[index] = rssiToDistanceRatio(reading.rssi, reading.beacon.signalStrength);
+                    location[index] = reading.beacon.location;
+                }
+                float a1 = location[0].x; float b1 = location[0].y; float d1 = distance[0];
+                float a2 = location[1].x; float b2 = location[1].y; float d2 = distance[1];
+                float a3 = location[2].x; float b3 = location[2].y; float d3 = distance[2];
+                // Maths borrowed from http://www.ece.ucdavis.edu/~chuah/classes/eec173B/eec173b-s05/students/BluetoothTri_ppt.pdf:
+                {
+                    float A, B, C, D, E, F, Det, DetX, DetY;
+                    A = -2*a1 + 2*a2;
+                    B = -2*b1 + 2*b2;
+                    C = -2*a2 + 2*a3;
+                    D = -2*b2 + 2*b3;
+                    E = FloatMath.pow(d1, 2) - FloatMath.pow(d2, 2) - FloatMath.pow(a1, 2) + FloatMath.pow(a2, 2) - FloatMath.pow(b1, 2) + FloatMath.pow(b2, 2);
+                    F = FloatMath.pow(d2, 2) - FloatMath.pow(d3, 2) - FloatMath.pow(a2, 2) + FloatMath.pow(a3, 2) - FloatMath.pow(b2, 2) + FloatMath.pow(b3, 2);
+                    //Using Cramer’s Rule
+                    Det = A*D -B*C;
+                    DetX= E*D -B*F;
+                    DetY = A*F -E*C;
+
+                    android.util.Log.d(TAG, "Det = " + Det + ", DetX = " + DetX + ", DetY = " + DetY);
+                    mLastLocation.x = DetX / Det;
+                    mLastLocation.y = DetY / Det;
                 }
             }
         }
