@@ -19,7 +19,7 @@ import android.util.FloatMath;
 public class Blook8rService implements LeScanCallback {
     private static final String TAG = "Blook8rService";
     private BluetoothAdapter mBluetoothAdapter;
-    private final Location mLastLocation = new Location();
+    private Location mLastLocation = null;
     private final List<RSSIReading> mReadings = new ArrayList<RSSIReading>();
     private final Map<String,Beacon> mBeacons = new HashMap<String,Beacon>();
     private Listener mListener;
@@ -169,8 +169,13 @@ public class Blook8rService implements LeScanCallback {
 
     public void updateLocation(float x, float y) {
         // TODO: Smooth based on confidence/time interval since last update.
-        mLastLocation.x = x * LOCATION_UPDATE_ALPHA + mLastLocation.x * (1 - LOCATION_UPDATE_ALPHA);
-        mLastLocation.y = y * LOCATION_UPDATE_ALPHA + mLastLocation.y * (1 - LOCATION_UPDATE_ALPHA);
+        float alpha = LOCATION_UPDATE_ALPHA;
+        if (mLastLocation == null) {
+            mLastLocation = new Location();
+            alpha = 1.0f;
+        }
+        mLastLocation.x = x * alpha + mLastLocation.x * (1 - alpha);
+        mLastLocation.y = y * alpha + mLastLocation.y * (1 - alpha);
         mListener.onLocationChanged(mLastLocation, 0.0f);
     }
 
@@ -202,10 +207,10 @@ public class Blook8rService implements LeScanCallback {
                 // TODO: Should probably calculate ratio between two beacons and then solve resulting ellipses - this would eliminate differences in receiver sensitivity.
                 float distance[] = new float[3];
                 Location location[] = new Location[3];
-                // Caculate distance from 3 strongest beacons.
+                // Calculate distance from 3 strongest beacons.
                 for (int index = 0; index < 3; index++) {
                     RSSIReading reading = mReadings.get(index);
-                    // Signal strength is at 1 distance unit, so ratio corresdponds to actual distance.
+                    // Signal strength is at 1 distance unit, so ratio corresponds to actual distance.
                     distance[index] = rssiToDistanceRatio(reading.rssi, reading.beacon.signalStrength);
                     location[index] = reading.beacon.location;
                 }
