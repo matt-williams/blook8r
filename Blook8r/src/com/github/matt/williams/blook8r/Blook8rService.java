@@ -84,7 +84,7 @@ public class Blook8rService implements LeScanCallback {
 
     private static class RSSIReading {
         private final Beacon beacon;
-        private int rssi;
+        private double rssi;
         private long timestamp;
 
         public RSSIReading(Beacon beacon) {
@@ -92,7 +92,7 @@ public class Blook8rService implements LeScanCallback {
         }
 
         public void setRSSI(int rssi) {
-            this.rssi = rssi;
+            this.rssi = (this.rssi + rssi) * 0.5;
             timestamp = System.currentTimeMillis();
         }
 
@@ -195,7 +195,7 @@ public class Blook8rService implements LeScanCallback {
         return Math.pow(10, (rssi2 - rssi1) / 20.0f);
     }
 
-    public static double rssiToPower(int rssi) {
+    public static double rssiToPower(double rssi) {
         return Math.pow(10, rssi / 10.0f);
     }
 
@@ -249,7 +249,7 @@ public class Blook8rService implements LeScanCallback {
                 Collections.sort(mReadings, new Comparator<RSSIReading>() {
                     @Override
                     public int compare(RSSIReading reading1, RSSIReading reading2) {
-                        return reading1.rssi - reading2.rssi;
+                        return (int)Math.signum(reading1.rssi - reading2.rssi);
                     }
                 });
                 double x = 0.0, y = 0.0, power = 0.0;
