@@ -29,7 +29,7 @@ public class Blook8rService implements LeScanCallback {
     private final List<RSSIReading> mReadings = new ArrayList<RSSIReading>();
     private final Map<String,Beacon> mBeacons = new HashMap<String,Beacon>();
     private Listener mListener;
-    private static final int IDEAL_BEACONS = 3; // Ideal number of beacons for position - if we don't have this, wait 5s.
+    private static final int IDEAL_BEACONS = 2; // Ideal number of beacons for position - if we don't have this, wait 5s.  TODO: Reset to 3 - 2 is best for demo as we don't have enough beacons
     private static final float LOCATION_UPDATE_ALPHA = 0.2f;
     private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
     private static final long WARM_UP_TIME_MILLIS = 5000; // Wait 5s for the minimum number of beacons.
