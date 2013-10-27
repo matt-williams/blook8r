@@ -34,9 +34,11 @@ void main() {
    
 <string name="mapFragmentShader"><![CDATA[
 varying lowp float z;
+uniform lowp vec4 lowColor;
+uniform lowp vec4 highColor;
     
 void main() {
-  gl_FragColor = vec4(z, z, z, 1.0);
+  gl_FragColor = mix(lowColor, highColor, z);
 }
 ]]></string>
 
