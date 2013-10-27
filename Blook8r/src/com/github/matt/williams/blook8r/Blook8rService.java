@@ -92,7 +92,11 @@ public class Blook8rService implements LeScanCallback {
         }
 
         public void setRSSI(int rssi) {
-            this.rssi = (this.rssi + rssi) * 0.5;
+            if (this.rssi == 0) {
+                this.rssi = rssi;
+            } else {
+                this.rssi = this.rssi * 0.8 + rssi * 0.2;
+            }
             timestamp = System.currentTimeMillis();
         }
 
