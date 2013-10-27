@@ -11,12 +11,14 @@ import org.json.JSONException;
 import org.json.JSONTokener;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.Matrix;
 import android.util.AttributeSet;
 
+import com.github.matt.williams.android.gl.BitmapTexture;
 import com.github.matt.williams.android.gl.FragmentShader;
 import com.github.matt.williams.android.gl.Program;
 import com.github.matt.williams.android.gl.Projection;
@@ -33,6 +35,7 @@ public class GLView extends GLSurfaceView implements Renderer {
     private Projection mProjection;
     private float[] mVertices;
     private float mBearing;
+    private BitmapTexture mLocationTexture;
 
     public GLView(Context context) {
         super(context);
@@ -68,6 +71,9 @@ public class GLView extends GLSurfaceView implements Renderer {
                                        new FragmentShader(getResources().getString(R.string.mapFragmentShader)));
         mLocationProgram = new Program(new VertexShader(getResources().getString(R.string.locationVertexShader)),
                                        new FragmentShader(getResources().getString(R.string.locationFragmentShader)));
+
+        mLocationTexture = new BitmapTexture(BitmapFactory.decodeResource(getResources(), R.raw.male, Utils.BITMAP_OPTIONS));
+
         mProjection = new Projection(40.0f, 60.0f, 0.0f);
         float[] matrix = new float[16];
         Matrix.setIdentityM(matrix, 0);
@@ -111,7 +117,9 @@ public class GLView extends GLSurfaceView implements Renderer {
 
         mLocationProgram.use();
         mLocationProgram.setUniform("matrix", matrix);
-        float[] vertices = new float[] {mLocationX, mLocationY, 1.2f};
+        mLocationTexture.use(GLES20.GL_TEXTURE0);
+        mLocationProgram.setUniform("texture", 0);
+        float[] vertices = new float[] {mLocationX, mLocationY, 0.5f};
         mLocationProgram.setVertexAttrib("xyz", vertices, 3);
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
 
