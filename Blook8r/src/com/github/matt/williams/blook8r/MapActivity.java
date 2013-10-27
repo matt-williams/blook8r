@@ -76,12 +76,15 @@ public class MapActivity extends FragmentActivity
         findViewById(R.id.transparencyTitle).setVisibility(mTransparencyBar.getVisibility());
         
         Bundle extras = getIntent().getExtras();
-        if (extras.containsKey("latitude"))
+        if (extras != null)
         {
-            mLatitude = extras.getDouble("latitude");
-            mLongitude = extras.getDouble("longitude");
+            if (extras.containsKey("latitude"))
+            {
+                mLatitude = extras.getDouble("latitude");
+                mLongitude = extras.getDouble("longitude");
+            }
+            mDescription = extras.getString("description");
         }
-        mDescription = extras.getString("description");
 
         setUpMapIfNeeded();
     }
