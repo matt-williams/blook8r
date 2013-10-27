@@ -17,6 +17,7 @@ import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.Matrix;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
 import com.github.matt.williams.android.gl.BitmapTexture;
 import com.github.matt.williams.android.gl.FragmentShader;
@@ -70,6 +71,7 @@ public class GLView extends GLSurfaceView implements Renderer {
     private boolean mTouched;
     private BitmapTexture mJewleryTextureLow;
     private BitmapTexture mLocationTextureLow;
+    private Toast mPendingBeaconsToast;
 
     private static final double CENTRE_X;
     private static final double CENTRE_Y;
@@ -116,6 +118,9 @@ public class GLView extends GLSurfaceView implements Renderer {
         } catch (IOException e) {
             android.util.Log.e(TAG, "Failed to read map.json", e);
         }
+
+        mPendingBeaconsToast = Toast.makeText(getContext(), "Locating...", Toast.LENGTH_LONG);
+        mPendingBeaconsToast.show();
     }
 
     @Override
@@ -261,6 +266,7 @@ public class GLView extends GLSurfaceView implements Renderer {
         mLocationX = (float)local[0];
         mLocationY = (float)local[1];
         mGotLocation = true;
+        mPendingBeaconsToast.cancel();
         android.util.Log.e(TAG, "Got OpenGL location " + mLocationX + ", " + mLocationY);
     }
 
