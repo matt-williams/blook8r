@@ -255,19 +255,17 @@ public class GLView extends GLSurfaceView implements Renderer {
     }
 
     public void setLocation(double x, double y) {
-        x = (x - CENTRE_X) / RADIUS * 11;
-        y = (y - CENTRE_Y) / RADIUS * 11;
-        mLocationX = (float)(x * Math.cos(10 / 180 * Math.PI) + y * Math.sin(10 / 180 * Math.PI));
-        mLocationY = (float)(x * -Math.sin(10 / 180 * Math.PI) + y * Math.cos(10 / 180 * Math.PI));
+        double[] local = CoordinateMapper.globalToLocal(x, y);
+        mLocationX = (float)local[0];
+        mLocationY = (float)local[1];
         android.util.Log.e(TAG, "Got OpenGL location " + mLocationX + ", " + mLocationY);
     }
 
     public void setTargetLocation(double x, double y) {
-        x = (x - CENTRE_X) / RADIUS * 11;
-        y = (y - CENTRE_Y) / RADIUS * 11;
-        mTargetLocationX = (float)(x * Math.cos(10 / 180 * Math.PI) + y * Math.sin(10 / 180 * Math.PI));
-        mTargetLocationY = (float)(x * -Math.sin(10 / 180 * Math.PI) + y * Math.cos(10 / 180 * Math.PI));
-        android.util.Log.e(TAG, "Got OpenGL target location " + mLocationX + ", " + mLocationY);
+        double[] local = CoordinateMapper.globalToLocal(x, y);
+        mTargetLocationX = (float)local[0];
+        mTargetLocationY = (float)local[1];
+        android.util.Log.e(TAG, "Got OpenGL target location " + mTargetLocationX + ", " + mTargetLocationY);
     }
 
     public float slideToBearing(float current, float desired, float alpha) {
