@@ -50,6 +50,8 @@ public class MainActivity extends Activity {
         	    mLongitude = -0.01970499652471314d;
         	    
         	    mDescription = "Christopher Ward";
+        	    
+        	    showMap(null);
         	}
  
         }
