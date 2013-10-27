@@ -101,7 +101,7 @@ public class GLView extends GLSurfaceView implements Renderer {
         System.arraycopy(mProjection.getViewMatrix(), 0, matrix, 0, 16);
         Matrix.rotateM(matrix, 0, -30.0f, -1.0f, 0.0f, 0.0f);
         Matrix.translateM(matrix, 0, 0, 10.0f, -10.0f);
-        Matrix.rotateM(matrix, 0, mBearing + 65, 0.0f, 0.0f, 1.0f); // = 65 accounts for different between actual compass directions and model
+        Matrix.rotateM(matrix, 0, mBearing + 65, 0.0f, 0.0f, 1.0f); // = 65 accounts for difference between actual compass directions and model
         Matrix.translateM(matrix, 0, -mLocationX, -mLocationY, 0);
 
         mMapProgram.use();
