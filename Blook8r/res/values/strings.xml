@@ -3,6 +3,6 @@
 
     <string name="app_name">Blook8r</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="hello_world">Blook8r helps you find your way indoors - it\'s SatNav for the places that satellites don\'t reach.\n\nChoose your preferred view from the options below.</string>
 
 </resources>

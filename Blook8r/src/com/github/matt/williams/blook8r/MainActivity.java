@@ -72,6 +72,12 @@ public class MainActivity extends Activity {
       startViewer(new Intent(this, GLActivity.class));
     }
     
+    public void scanBarcode(View view)
+    {
+    	Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse("http://zxing.appspot.com/scan"));      
+    	startActivity(intent);
+    }
+    
     void startViewer(Intent intent)
     {
     	if (mLatitude != null)

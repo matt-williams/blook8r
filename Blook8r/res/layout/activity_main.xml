@@ -22,7 +22,7 @@
         android:layout_below="@+id/textView1"
         android:layout_marginTop="31dp"
         android:onClick="showMap"
-        android:text="Map" />
+        android:text="Map View" />
 
     <Button
         android:id="@+id/button2"
@@ -33,5 +33,24 @@
         android:layout_marginTop="31dp"
         android:onClick="showGL"
         android:text="3D View" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/button2"
+        android:layout_below="@+id/button2"
+        android:layout_marginTop="65dp"
+        android:text="You may find it convenient to scan a QR code to select your destination." />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView2"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:onClick="scanBarcode"
+        android:text="Scan Barcode" />
 
 </RelativeLayout>
