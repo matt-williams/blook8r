@@ -16,6 +16,7 @@
 
 package com.github.matt.williams.blook8r;
 
+import java.util.List;
 import java.util.Map;
 
 import com.github.matt.williams.blook8r.Blook8rService.Beacon;
@@ -28,10 +29,14 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
@@ -61,6 +66,8 @@ public class MapActivity extends FragmentActivity
 	private Double mLatitude;
 	private Double mLongitude;
 	private String mDescription;
+	private Marker mLastPosition;
+	private Polyline mPath;
    
 
     @Override
@@ -202,8 +209,30 @@ public class MapActivity extends FragmentActivity
     
     void didLocationChanged(Location location, float error)
     {
+    	if (mLastPosition != null)
+    	{
+    		mLastPosition.remove();
+    	}
+    	
     	LatLng point = new LatLng(location.y, location.x);
-        mMap.addMarker(new MarkerOptions()
+    	
+    	
+    	if (mPath == null)
+    	{
+            mPath = mMap.addPolyline(new PolylineOptions()
+            .add(point)
+            .width(5)
+            .color(Color.GREEN));
+    	}
+    	else
+    	{
+        	List<LatLng>path = mPath.getPoints();
+        	path.add(point);
+        	mPath.setPoints(path);
+    	}
+
+    	
+        mLastPosition = mMap.addMarker(new MarkerOptions()
         .position(point)
         .title("Beacon")
         .snippet("" + location.x + "," + location.y)
