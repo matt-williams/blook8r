@@ -63,7 +63,7 @@
 
         <activity
             android:name=".GLActivity"
-            android:label="GLActivity" >
+            android:label="GLActivity" android:screenOrientation="portrait">
         </activity>
         
     </application>
