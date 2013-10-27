@@ -234,12 +234,14 @@ public class Blook8rService implements LeScanCallback {
             }
         }
         if (mReadings.size() >= MIN_BEACONS) {
+/*
             switch (mReadings.size()) {
             case 1:
                 // Only one reading - assume at the beacon.
                 updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.y);
                 break;
             default:
+*/
                 Collections.sort(mReadings, new Comparator<RSSIReading>() {
                     @Override
                     public int compare(RSSIReading reading1, RSSIReading reading2) {
@@ -311,8 +313,8 @@ public class Blook8rService implements LeScanCallback {
                     android.util.Log.d(TAG, "Det = " + Det + ", DetX = " + DetX + ", DetY = " + DetY);
                     updateLocation(DetX / Det, DetY / Det);
                 }
-*/
             }
+*/
         }
     }
 }
