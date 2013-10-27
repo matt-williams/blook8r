@@ -32,7 +32,7 @@ public class GLActivity extends Activity implements Blook8rService.Listener, Sen
         Bundle extras = getIntent().getExtras();
         if ((extras != null) &&
             (extras.containsKey("latitude"))) {
-            mGlView.setTargetLocation(extras.getDouble("latitude"), extras.getDouble("longitude"));
+            mGlView.setTargetLocation(extras.getDouble("longitude"), extras.getDouble("latitude"));
         }
     }
 

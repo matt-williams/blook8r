@@ -265,6 +265,7 @@ public class GLView extends GLSurfaceView implements Renderer {
     }
 
     public void setTargetLocation(double x, double y) {
+        android.util.Log.e(TAG, "Got global target location " + x + ", " + y);
         double[] local = CoordinateMapper.globalToLocal(x, y);
         mTargetLocationX = (float)local[0];
         mTargetLocationY = (float)local[1];
