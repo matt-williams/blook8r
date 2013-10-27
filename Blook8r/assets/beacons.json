@@ -1,5 +1,6 @@
-[{"Name": "StickNFind 1", "Address": "EB:36:B8:95:B3:75", "Location": {"x": -0.01972164350984351, "y": 51.50496387698498}, "SignalStrength": -61},
- {"Name": "StickNFind 2", "Address": "CF:BF:5E:21:65:B8", "Location": {"x": -0.0197956916541997, "y": 51.50493992293258}, "SignalStrength": -61},
- {"Name": "nRF LE 1", "Address": "00:18:AA:C0:FF:EF", "Location": {"x": -0.01978557409652804, "y": 51.50503744069911}, "SignalStrength": -59},
- {"Name": "nRF LE 2", "Address": "01:18:AA:C0:FF:EF", "Location": {"x": -0.01967974844200859, "y": 51.50502463567047}, "SignalStrength": -59}]
+[{"Name": "StickNFind 1", "Address": "EB:36:B8:95:B3:75", "Location": {"x": -0.01976326418087315, "y": 51.50498112132647}, "SignalStrength": -61},
+ {"Name": "StickNFind 2", "Address": "CF:BF:5E:21:65:B8", "Location": {"x": -0.01972138436633686, "y": 51.50497605383102}, "SignalStrength": -61},
+ {"Name": "nRF LE 1", "Address": "00:18:AA:C0:FF:EF", "Location": {"x": -0.01971407564593797, "y": 51.50494903608069}, "SignalStrength": -59},
+ {"Name": "nRF LE 2", "Address": "01:18:AA:C0:FF:EF", "Location": {"x": -0.0198306815960736, "y": 51.5049859321977}, "SignalStrength": -59}]
+
 
