@@ -71,6 +71,18 @@ public class GLView extends GLSurfaceView implements Renderer {
     private BitmapTexture mJewleryTextureLow;
     private BitmapTexture mLocationTextureLow;
 
+    private static final double CENTRE_X;
+    private static final double CENTRE_Y;
+    private static final double RADIUS;
+    static {
+        CENTRE_X = (-0.01975621696528207 + -0.01902470873661133 + -0.0191509753757757 + -0.01987457772519519) / 4;
+        CENTRE_Y = (51.50525850486366 + 51.5051846939183 + 51.50471551467772 + 51.50479160522183) / 4;
+        RADIUS = (Math.pow(Math.pow(-0.01975621696528207 - CENTRE_X, 2) + Math.pow(51.50525850486366 - CENTRE_Y, 2), 0.5) +
+                  Math.pow(Math.pow(-0.01902470873661133 - CENTRE_X, 2) + Math.pow(51.5051846939183 - CENTRE_Y, 2), 0.5) +
+                  Math.pow(Math.pow(-0.0191509753757757 - CENTRE_X, 2) + Math.pow(51.50471551467772 - CENTRE_Y, 2), 0.5) +
+                  Math.pow(Math.pow(-0.01987457772519519 - CENTRE_X, 2) + Math.pow(51.50479160522183 - CENTRE_Y, 2), 0.5)) / 4;
+    }
+
     public GLView(Context context) {
         super(context);
         initialize();
@@ -243,14 +255,18 @@ public class GLView extends GLSurfaceView implements Renderer {
     }
 
     public void setLocation(double x, double y) {
-        mLocationX = (float)((x + 0.01945718950902564f) / (-0.01945659122807086 - -0.01945718950902564) * 14 - 7);
-        mLocationY = (float)((y - 51.5049040161022f) / (51.50490606936728 - 51.5049040161022) * 14 - 7);
+        x = (x - CENTRE_X) / RADIUS * 11;
+        y = (y - CENTRE_Y) / RADIUS * 11;
+        mLocationX = (float)(x * Math.cos(10 / 180 * Math.PI) + y * Math.sin(10 / 180 * Math.PI));
+        mLocationY = (float)(x * -Math.sin(10 / 180 * Math.PI) + y * Math.cos(10 / 180 * Math.PI));
         android.util.Log.e(TAG, "Got OpenGL location " + mLocationX + ", " + mLocationY);
     }
 
     public void setTargetLocation(double x, double y) {
-        mTargetLocationX = (float)((x + 0.01945718950902564f) / (-0.01945659122807086 - -0.01945718950902564) * 14 - 7);
-        mTargetLocationY = (float)((y - 51.5049040161022f) / (51.50490606936728 - 51.5049040161022) * 14 - 7);
+        x = (x - CENTRE_X) / RADIUS * 11;
+        y = (y - CENTRE_Y) / RADIUS * 11;
+        mTargetLocationX = (float)(x * Math.cos(10 / 180 * Math.PI) + y * Math.sin(10 / 180 * Math.PI));
+        mTargetLocationY = (float)(x * -Math.sin(10 / 180 * Math.PI) + y * Math.cos(10 / 180 * Math.PI));
         android.util.Log.e(TAG, "Got OpenGL target location " + mLocationX + ", " + mLocationY);
     }
 

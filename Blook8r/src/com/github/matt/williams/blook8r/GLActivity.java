@@ -28,6 +28,12 @@ public class GLActivity extends Activity implements Blook8rService.Listener, Sen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_glview);
         mGlView = (GLView)findViewById(R.id.glview);
+
+        Bundle extras = getIntent().getExtras();
+        if ((extras != null) &&
+            (extras.containsKey("latitude"))) {
+            mGlView.setTargetLocation(extras.getDouble("latitude"), extras.getDouble("longitude"));
+        }
     }
 
     @Override

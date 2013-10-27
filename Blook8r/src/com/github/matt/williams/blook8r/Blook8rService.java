@@ -130,6 +130,8 @@ public class Blook8rService implements LeScanCallback {
     }
 
 	private void loadBeaconData(Context context) {
+	    mBeacons.clear();
+	    mReadings.clear();
 		// Load beacon data
         try {
             JSONArray jsonArray = (JSONArray)new JSONTokener(JSONUtils.readStream(context.getAssets().open("beacons.json"))).nextValue();
@@ -161,6 +163,7 @@ public class Blook8rService implements LeScanCallback {
         Beacon beacon = mBeacons.get(device.getAddress());
         if (beacon != null) {
             boolean needNewReading = true;
+            int ii = 0;
             for (RSSIReading reading : mReadings) {
                 if (reading.beacon == beacon) {
                     android.util.Log.d(TAG, "Updating RSSIReading " + reading + " with RSSI " + rssi);
@@ -179,7 +182,7 @@ public class Blook8rService implements LeScanCallback {
     }
 
     /// Returns the distance from here to the source of RSSI1 over the distance from here to the source of RSSI2
-    public static double rssiToDistanceRatio(int rssi1, int rssi2) {
+    public static double rssiToDistanceRatio(double rssi1, double rssi2) {
         // RSSI is in dB, so is 10*log10(power)
         // Hence, power is 10^(rssi/10)
         // Ratio of powers is 10^((rssiA - rssiB) / 10)
@@ -187,6 +190,14 @@ public class Blook8rService implements LeScanCallback {
         // Ratio of distances is 1/sqrt(10^((rssiA - rssiB) / 10))
         // This is 10^((rssiB - rssiA) / 20)
         return Math.pow(10, (rssi2 - rssi1) / 20.0f);
+    }
+
+    public static double rssiToPower(int rssi) {
+        return Math.pow(10, rssi / 10.0f);
+    }
+
+    public static double powerToRssi(double power) {
+        return 10.0 * Math.log10(power);
     }
 
     public static double ratioToAlpha(double a_over_b) {
@@ -228,6 +239,29 @@ public class Blook8rService implements LeScanCallback {
                 // Only one reading - assume at the beacon.
                 updateLocation(mReadings.get(0).beacon.location.x, mReadings.get(0).beacon.location.y);
                 break;
+            default:
+                Collections.sort(mReadings, new Comparator<RSSIReading>() {
+                    @Override
+                    public int compare(RSSIReading reading1, RSSIReading reading2) {
+                        return reading1.rssi - reading2.rssi;
+                    }
+                });
+                double x = 0.0, y = 0.0, power = 0.0;
+                for (RSSIReading current : mReadings) {
+
+                    if (power == 0.0) {
+                        x = current.beacon.location.x;
+                        y = current.beacon.location.y;
+                        power = rssiToPower(current.rssi - current.beacon.signalStrength);
+                    } else {
+                        double alpha = ratioToAlpha(rssiToDistanceRatio(powerToRssi(power), current.rssi - current.beacon.signalStrength));
+                        x = x * (1 - alpha) + current.beacon.location.x * alpha;
+                        y = y * (1 - alpha) + current.beacon.location.y * alpha;
+                        power += rssiToPower(current.rssi - current.beacon.signalStrength);
+                    }
+                }
+                updateLocation(x, y);
+/*
             case 2:
                 // 2 readings - assume between them.
                 RSSIReading reading1 = mReadings.get(0);
@@ -249,7 +283,8 @@ public class Blook8rService implements LeScanCallback {
                 // TODO: Should probably calculate ratio between two beacons and then solve resulting ellipses - this would eliminate differences in receiver sensitivity.
                 double distance[] = new double[3];
                 Location location[] = new Location[3];
-                // Calculate distance from 3 strongest beacons.
+                // Calculate distance between strongest beacon and next two.
+                distance[0] = 1;
                 for (int index = 0; index < 3; index++) {
                     RSSIReading reading = mReadings.get(index);
                     // Signal strength is at 1 distance unit, so ratio corresponds to actual distance.
@@ -276,6 +311,7 @@ public class Blook8rService implements LeScanCallback {
                     android.util.Log.d(TAG, "Det = " + Det + ", DetX = " + DetX + ", DetY = " + DetY);
                     updateLocation(DetX / Det, DetY / Det);
                 }
+*/
             }
         }
     }
