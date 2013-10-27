@@ -30,7 +30,7 @@ public class Blook8rService implements LeScanCallback {
     private final Map<String,Beacon> mBeacons = new HashMap<String,Beacon>();
     private Listener mListener;
     private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
-    private static final float LOCATION_UPDATE_ALPHA = 0.1f;
+    private static final float LOCATION_UPDATE_ALPHA = 0.2f;
     private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
 
     public static class Location {
