@@ -196,21 +196,21 @@ public class GLView extends GLSurfaceView implements Renderer {
         mMapProgram.setUniform("matrix", matrix);
         setHighLowColors(mMapProgram, mAltitude - 12.0f);
         mMapProgram.setVertexAttrib("xyz", mOtherVertices, 3);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, mOtherVertices.length / 3);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mOtherVertices.length / 3);
         Matrix.translateM(matrix, 0, 0, 0, 6.0f);
 
         mMapProgram.use();
         mMapProgram.setUniform("matrix", matrix);
         setHighLowColors(mMapProgram, mAltitude - 6.0f);
         mMapProgram.setVertexAttrib("xyz", mOtherVertices, 3);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, mOtherVertices.length / 3);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mOtherVertices.length / 3);
         Matrix.translateM(matrix, 0, 0, 0, 6.0f);
 
         mMapProgram.use();
         mMapProgram.setUniform("matrix", matrix);
         setHighLowColors(mMapProgram, mAltitude);
         mMapProgram.setVertexAttrib("xyz", mVertices, 3);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, mVertices.length / 3);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mVertices.length / 3);
 
         float[] vertices;
         if (mGotLocation) {
@@ -233,7 +233,7 @@ public class GLView extends GLSurfaceView implements Renderer {
         mMapProgram.setUniform("matrix", matrix);
         setHighLowColors(mMapProgram, mAltitude + 6.0f);
         mMapProgram.setVertexAttrib("xyz", mOtherVertices, 3);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, mOtherVertices.length / 3);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mOtherVertices.length / 3);
 
         mLocationProgram.use();
         mLocationProgram.setUniform("matrix", matrix);
@@ -253,7 +253,7 @@ public class GLView extends GLSurfaceView implements Renderer {
         mMapProgram.setUniform("matrix", matrix);
         setHighLowColors(mMapProgram, mAltitude + 12.0f);
         mMapProgram.setVertexAttrib("xyz", mOtherVertices, 3);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, mOtherVertices.length / 3);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, mOtherVertices.length / 3);
     }
 
     public void setLocation(double x, double y) {
