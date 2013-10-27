@@ -7,14 +7,16 @@ uniform mat4 matrix;
 
 void main() {
   gl_Position = matrix * vec4(xyz, 1.0);
-  gl_PointSize = 32.0;
+  gl_PointSize = 96.0;
 }
 ]]></string>
    
    
 <string name="locationFragmentShader"><![CDATA[
+uniform sampler2D tex;
+ 
 void main() {
-  gl_FragColor = vec4(1, 0, 0, 1.0);
+  gl_FragColor = texture2D(tex, gl_PointCoord);
 }
 ]]></string>
 
