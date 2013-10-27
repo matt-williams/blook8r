@@ -32,7 +32,6 @@ public class GLView extends GLSurfaceView implements Renderer {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        android.util.Log.e(TAG, "Got TouchEvent " + event);
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
             mTouched = true;
         } else if ((event.getActionMasked() == MotionEvent.ACTION_MOVE) &&
@@ -188,7 +187,7 @@ public class GLView extends GLSurfaceView implements Renderer {
         float[] matrix = new float[16];
         System.arraycopy(mProjection.getViewMatrix(), 0, matrix, 0, 16);
         Matrix.rotateM(matrix, 0, -15.0f, -1.0f, 0.0f, 0.0f);
-        Matrix.translateM(matrix, 0, 0, 15.0f, -4.0f);
+        Matrix.translateM(matrix, 0, 0, 8.0f, -3.5f);
         Matrix.rotateM(matrix, 0, mBearing + 65, 0.0f, 0.0f, 1.0f); // = 65 accounts for difference between actual compass directions and model
         Matrix.translateM(matrix, 0, -mLocationX, -mLocationY, 0);
 
