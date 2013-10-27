@@ -57,6 +57,7 @@ public class GLView extends GLSurfaceView implements Renderer {
     private Program mLocationProgram;
     private float mLocationY;
     private float mLocationX;
+    private boolean mGotLocation = false;
     private Projection mProjection;
     private float[] mVertices;
     private float[] mOtherVertices;
@@ -212,19 +213,21 @@ public class GLView extends GLSurfaceView implements Renderer {
         mMapProgram.setVertexAttrib("xyz", mVertices, 3);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, mVertices.length / 3);
 
-        mLocationProgram.use();
-        mLocationProgram.setUniform("matrix", matrix);
         float[] vertices;
-        if (mAltitude < 4.0f) {
-            mLocationTexture.use(GLES20.GL_TEXTURE0);
-            vertices = new float[] {mLocationX, mLocationY, 0.5f};
-        } else {
-            mLocationTextureLow.use(GLES20.GL_TEXTURE0);
-            vertices = new float[] {mLocationX, mLocationY, -1.0f};
+        if (mGotLocation) {
+            mLocationProgram.use();
+            mLocationProgram.setUniform("matrix", matrix);
+            if (mAltitude < 4.0f) {
+                mLocationTexture.use(GLES20.GL_TEXTURE0);
+                vertices = new float[] {mLocationX, mLocationY, 0.5f};
+            } else {
+                mLocationTextureLow.use(GLES20.GL_TEXTURE0);
+                vertices = new float[] {mLocationX, mLocationY, -1.0f};
+            }
+            mLocationProgram.setUniform("texture", 0);
+            mLocationProgram.setVertexAttrib("xyz", vertices, 3);
+            GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
         }
-        mLocationProgram.setUniform("texture", 0);
-        mLocationProgram.setVertexAttrib("xyz", vertices, 3);
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
 
         Matrix.translateM(matrix, 0, 0, 0, 6.0f);
         mMapProgram.use();
@@ -258,6 +261,7 @@ public class GLView extends GLSurfaceView implements Renderer {
         double[] local = CoordinateMapper.globalToLocal(x, y);
         mLocationX = (float)local[0];
         mLocationY = (float)local[1];
+        mGotLocation = true;
         android.util.Log.e(TAG, "Got OpenGL location " + mLocationX + ", " + mLocationY);
     }
 

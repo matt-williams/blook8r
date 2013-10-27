@@ -29,9 +29,11 @@ public class Blook8rService implements LeScanCallback {
     private final List<RSSIReading> mReadings = new ArrayList<RSSIReading>();
     private final Map<String,Beacon> mBeacons = new HashMap<String,Beacon>();
     private Listener mListener;
-    private static final int MIN_BEACONS = 1; // Minimum number of beacons for position TODO: Increase this post testing.
+    private static final int IDEAL_BEACONS = 3; // Ideal number of beacons for position - if we don't have this, wait 5s.
     private static final float LOCATION_UPDATE_ALPHA = 0.2f;
     private static final long EXPIRY_TIME_MILLIS = 5000; // Expire readings after 5s.
+    private static final long WARM_UP_TIME_MILLIS = 5000; // Wait 5s for the minimum number of beacons.
+    private long startTime;
 
     public static class Location {
         public double x;
@@ -111,6 +113,7 @@ public class Blook8rService implements LeScanCallback {
 
     public boolean start(Context context, Listener listener) {
     	loadBeaconData(context);
+    	startTime = System.currentTimeMillis();
 
         final BluetoothManager bluetoothManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
@@ -233,7 +236,8 @@ public class Blook8rService implements LeScanCallback {
                 it.remove();
             }
         }
-        if (mReadings.size() >= MIN_BEACONS) {
+        if ((mReadings.size() >= IDEAL_BEACONS) ||
+            (System.currentTimeMillis() > startTime + WARM_UP_TIME_MILLIS)) {
 /*
             switch (mReadings.size()) {
             case 1:
