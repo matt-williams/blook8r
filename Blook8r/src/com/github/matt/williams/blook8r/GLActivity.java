@@ -3,16 +3,25 @@ package com.github.matt.williams.blook8r;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.Menu;
 
 import com.github.matt.williams.blook8r.Blook8rService.Location;
 
-public class GLActivity extends Activity implements Blook8rService.Listener {
+public class GLActivity extends Activity implements Blook8rService.Listener, SensorEventListener {
 
     private static final int REQUEST_ENABLE_BT = 1;
+    private static final String TAG = "GLActivity";
     private final Blook8rService blook8r = new Blook8rService();
     private GLView mGlView;
+    private float[] mAccelerometerValues;
+    private float[] mMagnetometerValues;
+    private final float[] mR = new float[9];
+    private final float[] mOrientation = new float[3];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +49,8 @@ public class GLActivity extends Activity implements Blook8rService.Listener {
 
     @Override
     public void onPause() {
+        ((SensorManager)getSystemService(SENSOR_SERVICE)).unregisterListener(this);
+
         blook8r.stop();
         mGlView.onPause();
         super.onPause();
@@ -55,11 +66,47 @@ public class GLActivity extends Activity implements Blook8rService.Listener {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
+
+        SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        Sensor magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (magnetometer != null) {
+            sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
+        }
     }
 
     @Override
     public void onLocationChanged(Location location, float error) {
-        android.util.Log.e("Main", "Got Location " + location);
+        android.util.Log.i(TAG, "Got Location " + location);
         mGlView.setLocation(location.x, location.y);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            if (mAccelerometerValues == null) {
+                mAccelerometerValues = new float[event.values.length];
+            }
+            System.arraycopy(event.values, 0, mAccelerometerValues, 0, event.values.length);
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            if (mMagnetometerValues == null) {
+                mMagnetometerValues = new float[event.values.length];
+            }
+            System.arraycopy(event.values, 0, mMagnetometerValues, 0, event.values.length);
+        }
+        if ((mAccelerometerValues != null) && (mMagnetometerValues != null)) {
+            SensorManager.getRotationMatrix(mR, null, mAccelerometerValues, mMagnetometerValues);
+            SensorManager.getOrientation(mR, mOrientation);
+            mGlView.setBearing(mOrientation[0] * 180 / (float)Math.PI);
+        }
     }
 }

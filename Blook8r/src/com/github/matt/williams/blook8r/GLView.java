@@ -32,6 +32,7 @@ public class GLView extends GLSurfaceView implements Renderer {
     private float mLocationX;
     private Projection mProjection;
     private float[] mVertices;
+    private float mBearing;
 
     public GLView(Context context) {
         super(context);
@@ -96,17 +97,11 @@ public class GLView extends GLSurfaceView implements Renderer {
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        float[] oldMatrix = mProjection.getRotationMatrix();
-        float[] newMatrix = new float[16];
-        Matrix.rotateM(newMatrix, 0, oldMatrix, 0, 0.1f, 0.0f, 0.0f, 1.0f);
-        mProjection.setRotationMatrix(newMatrix);
-
         float[] matrix = new float[16];
-        System.arraycopy(mProjection.getProjectionMatrix(), 0, matrix, 0, 16);
+        System.arraycopy(mProjection.getViewMatrix(), 0, matrix, 0, 16);
         Matrix.rotateM(matrix, 0, -30.0f, -1.0f, 0.0f, 0.0f);
-        Matrix.translateM(matrix, 0, 0, -8.0f, -20.0f);
-        Matrix.multiplyMM(newMatrix, 0, matrix, 0, mProjection.getRotationMatrix(), 0);
-        matrix = newMatrix;
+        Matrix.translateM(matrix, 0, 0, 10.0f, -10.0f);
+        Matrix.rotateM(matrix, 0, mBearing, 0.0f, 0.0f, 1.0f);
         Matrix.translateM(matrix, 0, -mLocationX, -mLocationY, 0);
 
         mMapProgram.use();
@@ -126,5 +121,9 @@ public class GLView extends GLSurfaceView implements Renderer {
         mLocationX = (float)((x + 0.01945718950902564f) / (-0.01945659122807086 - -0.01945718950902564) * 14 - 7);
         mLocationY = (float)((y - 51.5049040161022f) / (51.50490606936728 - 51.5049040161022) * 14 - 7);
         android.util.Log.e(TAG, "Got OpenGL location " + mLocationX + ", " + mLocationY);
+    }
+
+    public void setBearing(float bearing) {
+        mBearing = 0.1f * bearing + 0.9f * mBearing;
     }
 }
