@@ -38,7 +38,6 @@ public class CoordinateMapper {
         double v2 = ((gx - GP2X) * (GP4X - GP2X) + (gy - GP2Y) * (GP4Y - GP2Y)) / Math.pow(GP24, 2);
         double u = u1 * (1 - (v1 + v2) / 2) + u2 * ((v1 + v2) / 2);
         double v = v1 * (1 - (u1 + u2) / 2) + v2 * ((u1 + u2) / 2);
-        android.util.Log.e("CoordinateMapper", "(u, v) = (" + u + ", " + v + ")");
         double lx = LP1X + u * (LP2X - LP1X) + v * (LP3X - LP1X);
         double ly = LP1Y + u * (LP2Y - LP1Y) + v * (LP3Y - LP1Y);
         return new double[] {lx, ly};
