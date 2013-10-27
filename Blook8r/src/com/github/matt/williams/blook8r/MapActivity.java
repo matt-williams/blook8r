@@ -48,8 +48,9 @@ public class MapActivity extends FragmentActivity
 {
     private static final int TRANSPARENCY_MAX = 100;
     private static final LatLng PLACE = new LatLng(
-    		51.50492954737005,
-    		-0.01932796037294348);
+
+    51.50499430792036,
+    -0.01945302448731812);
     
     private GoogleMap mMap;
     private GroundOverlay mGroundOverlay;
@@ -57,6 +58,8 @@ public class MapActivity extends FragmentActivity
 
     private static final int REQUEST_ENABLE_BT = 1;
     private final Blook8rService blook8r = new Blook8rService();
+	private Double mLatitude;
+	private Double mLongitude;
    
 
     @Override
@@ -64,13 +67,19 @@ public class MapActivity extends FragmentActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ground_overlay_demo);
 
-
         mTransparencyBar = (SeekBar) findViewById(R.id.transparencySeekBar);
         mTransparencyBar.setMax(TRANSPARENCY_MAX);
         mTransparencyBar.setProgress(0);
         
         mTransparencyBar.setVisibility(View.GONE);
         findViewById(R.id.transparencyTitle).setVisibility(mTransparencyBar.getVisibility());
+        
+        Bundle extras = getIntent().getExtras();
+        if (extras.containsKey("latitude"))
+        {
+            mLatitude = extras.getDouble("latitude");
+            mLongitude = extras.getDouble("longitude");
+        }
 
         setUpMapIfNeeded();
     }
@@ -137,7 +146,14 @@ public class MapActivity extends FragmentActivity
 
         mTransparencyBar.setOnSeekBarChangeListener(this);
         
-
+        if (mLatitude != null)
+        {
+           	LatLng point = new LatLng(mLatitude, mLongitude);
+            mMap.addMarker(new MarkerOptions()
+            .position(point)
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+            .title("Target"));
+        }
     }
 
     @Override
