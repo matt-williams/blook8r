@@ -230,13 +230,11 @@ public class MapActivity extends FragmentActivity
         	path.add(point);
         	mPath.setPoints(path);
     	}
-
     	
         mLastPosition = mMap.addMarker(new MarkerOptions()
         .position(point)
         .title("Beacon")
-        .snippet("" + location.x + "," + location.y)
-        .draggable(true));
+        .snippet("" + location.x + "," + location.y));
         android.util.Log.e("Main", "Got Location lat:" + point.latitude + " lon:" + point.longitude);
     }
 }
