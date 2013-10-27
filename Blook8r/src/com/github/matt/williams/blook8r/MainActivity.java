@@ -8,8 +8,9 @@ import android.view.Menu;
 import android.view.View;
 
 public class MainActivity extends Activity {
-	Double latitude;
-	Double longitude;
+	Double mLatitude;
+	Double mLongitude;
+	String mDescription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,16 +22,36 @@ public class MainActivity extends Activity {
         Uri uri = intent.getData();
         if (uri != null)
         {
-        	String path = uri.toString().substring("target://".length());
-        	
-        	int comma = path.indexOf(",");
-        	if (comma != -1)
+        	if (uri.getScheme() == "target")
         	{
-        		String latString = path.substring(0,comma);
-        		String lonString = path.substring(comma + 1);
-        		latitude = Double.valueOf(latString);
-        		longitude = Double.valueOf(lonString);
+        		// It's of the form target://<latitude>,<longitude><;optional description>
+               	String path = uri.toString().substring("target://".length());
+               	
+               	int semi = path.indexOf(";");
+               	if (semi != -1)
+               	{
+               		mDescription = path.substring(semi + 1);
+               		path = path.substring(0,semi);
+               	}
+            	
+            	int comma = path.indexOf(",");
+            	if (comma != -1)
+            	{
+            		String latString = path.substring(0,comma);
+            		String lonString = path.substring(comma + 1);
+            		mLatitude = Double.valueOf(latString);
+            		mLongitude = Double.valueOf(lonString);
+            	}
         	}
+        	else
+        	{
+        		// We assume it's a real QR code we scanned, so use hard coded values
+        		mLatitude = 51.5051040211653d;
+        	    mLongitude = -0.01970499652471314d;
+        	    
+        	    mDescription = "Christopher Ward";
+        	}
+ 
         }
     }
 
@@ -53,10 +74,14 @@ public class MainActivity extends Activity {
     
     void startViewer(Intent intent)
     {
-    	if (latitude != null)
+    	if (mLatitude != null)
     	{
-    		intent.putExtra("latitude", latitude);
-    		intent.putExtra("longitude", longitude);
+    		intent.putExtra("latitude", mLatitude);
+    		intent.putExtra("longitude", mLongitude);
+    	}
+    	if (mDescription != null)
+    	{
+    		intent.putExtra("description", mDescription);
     	}
     	startActivity(intent);
     }

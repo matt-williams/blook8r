@@ -60,6 +60,7 @@ public class MapActivity extends FragmentActivity
     private final Blook8rService blook8r = new Blook8rService();
 	private Double mLatitude;
 	private Double mLongitude;
+	private String mDescription;
    
 
     @Override
@@ -80,6 +81,7 @@ public class MapActivity extends FragmentActivity
             mLatitude = extras.getDouble("latitude");
             mLongitude = extras.getDouble("longitude");
         }
+        mDescription = extras.getString("description");
 
         setUpMapIfNeeded();
     }
@@ -152,7 +154,7 @@ public class MapActivity extends FragmentActivity
             mMap.addMarker(new MarkerOptions()
             .position(point)
             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-            .title("Target"));
+            .title(mDescription != null ? mDescription : "Target"));
         }
     }
 
